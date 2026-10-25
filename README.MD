@@ -53,16 +53,16 @@ Generate a secret on the host:
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Set that exact 64-character value in the environment on **both** the host and Pi before launching their programs. Do not commit it or share it over an untrusted channel.
+Use `.env.example` as a reference for the required variable name, and set the generated value in the OS environment on **both** the host and Pi before launching their programs. The application reads environment variables directly; it does not load `.env` files. Do not commit your real secret or share it over an untrusted channel.
 
 ```powershell
 # Windows PowerShell
-$env:CLAUDE_DECK_COMMAND_TOKEN = "<generated-secret>"
+$env:PI_RAINBOW_DECK_COMMAND_TOKEN = "<generated-secret>"
 ```
 
 ```sh
 # macOS / Linux
-export CLAUDE_DECK_COMMAND_TOKEN="<generated-secret>"
+export PI_RAINBOW_DECK_COMMAND_TOKEN="<generated-secret>"
 ```
 
 Start the host bridge in that same terminal:
@@ -86,7 +86,7 @@ If uv is available for the Pi's OS and CPU architecture, install the Pi runtime 
 
 ```sh
 uv sync --no-dev --extra pi
-export CLAUDE_DECK_COMMAND_TOKEN="<same-generated-secret>"
+export PI_RAINBOW_DECK_COMMAND_TOKEN="<same-generated-secret>"
 uv run --no-sync pi-rainbow-deck-pi
 ```
 
@@ -97,11 +97,11 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install '.[pi]'
-export CLAUDE_DECK_COMMAND_TOKEN="<same-generated-secret>"
+export PI_RAINBOW_DECK_COMMAND_TOKEN="<same-generated-secret>"
 pi-rainbow-deck-pi
 ```
 
-For a persistent systemd service, configure its `ExecStart` to use the installed environment's `pi-rainbow-deck-pi` command, and set `CLAUDE_DECK_COMMAND_TOKEN` with a private systemd override (for example, `sudo systemctl edit claude-deck.service`). Restrict access to the override and restart the service after updating it. The optional `deploy.sh` script syncs the Pi package to its configured target and restarts that existing service. The target directory and service name retain their historical `claude-deck` identifiers for compatibility with existing Pi installs.
+For a persistent systemd service, configure its `ExecStart` to use the installed environment's `pi-rainbow-deck-pi` command, and set `PI_RAINBOW_DECK_COMMAND_TOKEN` with a private systemd override (for example, `sudo systemctl edit claude-deck.service`). Restrict access to the override and restart the service after updating it. The optional `deploy.sh` script syncs the Pi package to its configured target and restarts that existing service. The target directory and service name retain their historical `claude-deck` identifiers for compatibility with existing Pi installs.
 
 ### 5. Run tests (optional)
 

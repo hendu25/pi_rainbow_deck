@@ -8,7 +8,7 @@ tests, and code changes are all welcome.
 - Search existing issues and pull requests to avoid duplicates.
 - Include your operating system, Python version, Pi model (if relevant), and
   Rainbow HAT details.
-- Never include your `CLAUDE_DECK_COMMAND_TOKEN`, credentials, or private Claude
+- Never include your `PI_RAINBOW_DECK_COMMAND_TOKEN`, credentials, or private Claude
   Code transcripts in an issue.
 - For a suspected security vulnerability, do not open a public issue. Follow the
   private reporting instructions in GitHub's Security tab if private

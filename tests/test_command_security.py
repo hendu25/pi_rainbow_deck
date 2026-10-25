@@ -36,17 +36,17 @@ def _import_pi_main(monkeypatch):
     hardware.reset_hardware = lambda *args: None
     monkeypatch.setitem(sys.modules, "pi_rainbow_deck_pi.hat_hardware", hardware)
 
-    previous_token = os.environ.get("CLAUDE_DECK_COMMAND_TOKEN")
-    os.environ["CLAUDE_DECK_COMMAND_TOKEN"] = TOKEN
+    previous_token = os.environ.get("PI_RAINBOW_DECK_COMMAND_TOKEN")
+    os.environ["PI_RAINBOW_DECK_COMMAND_TOKEN"] = TOKEN
     try:
         from pi_rainbow_deck_pi import main
 
         return main
     finally:
         if previous_token is None:
-            os.environ.pop("CLAUDE_DECK_COMMAND_TOKEN", None)
+            os.environ.pop("PI_RAINBOW_DECK_COMMAND_TOKEN", None)
         else:
-            os.environ["CLAUDE_DECK_COMMAND_TOKEN"] = previous_token
+            os.environ["PI_RAINBOW_DECK_COMMAND_TOKEN"] = previous_token
 
 
 def signed_command(button_id="BTN_A", timestamp=None, token=TOKEN, **extra_fields):

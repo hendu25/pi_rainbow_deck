@@ -95,10 +95,10 @@ def main():
     pi_ip = networking.get("pi_ip", "192.168.7.2")
     telemetry_port = networking.get("telemetry_port", 5001)
     context_limit = claude_cfg.get("context_window_limit", 200000)
-    command_token = os.environ.get("CLAUDE_DECK_COMMAND_TOKEN", "")
+    command_token = os.environ.get("PI_RAINBOW_DECK_COMMAND_TOKEN", "")
     if not re.fullmatch(r"[0-9a-fA-F]{64}", command_token):
         raise RuntimeError(
-            "Set CLAUDE_DECK_COMMAND_TOKEN to the same 64-character hex secret on the host and Pi."
+            "Set PI_RAINBOW_DECK_COMMAND_TOKEN to the same 64-character hex secret on the host and Pi."
         )
 
     print("=" * 60)

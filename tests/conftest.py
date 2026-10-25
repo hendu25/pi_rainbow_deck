@@ -49,7 +49,7 @@ def fake_rainbowhat(monkeypatch):
 
 @pytest.fixture
 def pi_modules(monkeypatch, fake_rainbowhat):
-    monkeypatch.setenv("CLAUDE_DECK_COMMAND_TOKEN", "a" * 64)
+    monkeypatch.setenv("PI_RAINBOW_DECK_COMMAND_TOKEN", "a" * 64)
     hardware = importlib.import_module("pi_rainbow_deck_pi.hat_hardware")
     main = importlib.import_module("pi_rainbow_deck_pi.main")
     return main, hardware, fake_rainbowhat

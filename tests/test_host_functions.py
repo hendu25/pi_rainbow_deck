@@ -149,7 +149,7 @@ def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
             "profiles": {"SAFETY": {"BTN_A": "APPROVE"}},
         },
     )
-    monkeypatch.setenv("CLAUDE_DECK_COMMAND_TOKEN", TOKEN)
+    monkeypatch.setenv("PI_RAINBOW_DECK_COMMAND_TOKEN", TOKEN)
     monkeypatch.setattr(bridge.socket, "socket", lambda *args: listener)
     thread = SimpleNamespace(start=Mock())
     monkeypatch.setattr(bridge.threading, "Thread", lambda **kwargs: thread)
@@ -165,8 +165,8 @@ def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
 
 def test_bridge_main_rejects_missing_token_before_starting(monkeypatch):
     monkeypatch.setattr(bridge, "load_config", lambda: {})
-    monkeypatch.delenv("CLAUDE_DECK_COMMAND_TOKEN", raising=False)
-    with pytest.raises(RuntimeError, match="CLAUDE_DECK_COMMAND_TOKEN"):
+    monkeypatch.delenv("PI_RAINBOW_DECK_COMMAND_TOKEN", raising=False)
+    with pytest.raises(RuntimeError, match="PI_RAINBOW_DECK_COMMAND_TOKEN"):
         bridge.main()
 
 
