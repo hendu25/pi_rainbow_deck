@@ -18,6 +18,7 @@ else:
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 MAX_COMMAND_BYTES = 4096
 COMMAND_TIMESTAMP_WINDOW = 30
+QUIT_COMMAND_ID = "QUIT"
 
 
 def load_config():
@@ -84,20 +85,45 @@ def receive_command(conn):
     raise ValueError("Command message exceeds maximum size")
 
 
+def handle_command(data, command_token, used_nonces, host_actions, dry_run=False):
+    button_id = validate_command(data, command_token, used_nonces)
+    if button_id is None:
+        print("[WARNING] Rejected unauthenticated or replayed command")
+        return False
+
+    if button_id == QUIT_COMMAND_ID:
+        print("[INFO] Authenticated host shutdown requested")
+        return True
+
+    action_id = host_actions.get(button_id)
+    if not action_id:
+        print(f"[WARNING] Unmapped button ID: {button_id}")
+        return False
+
+    if dry_run:
+        print(f"[DRY RUN] Would execute action: {action_id}")
+    else:
+        execute_action(action_id)
+    return False
+
+
 def main():
     config = load_config()
     active_profile = config.get("active_profile", "SAFETY")
     networking = config.get("networking", {})
     claude_cfg = config.get("claude", {})
+    local_test_mode = os.environ.get("PI_RAINBOW_DECK_LOCAL_TEST") == "1"
 
     host_actions = config.get("profiles", {}).get(active_profile, {})
-    host_ip = networking.get("host_ip", "192.168.7.1")
+    host_ip = (
+        "127.0.0.1" if local_test_mode else networking.get("host_ip", "192.168.7.1")
+    )
     port = networking.get("command_port", 5000)
-    pi_ip = networking.get("pi_ip", "192.168.7.2")
+    pi_ip = "127.0.0.1" if local_test_mode else networking.get("pi_ip", "192.168.7.2")
     telemetry_port = networking.get("telemetry_port", 5001)
     context_limit = claude_cfg.get("context_window_limit", 200000)
     command_token = os.environ.get("PI_RAINBOW_DECK_COMMAND_TOKEN", "")
-    dry_run = os.environ.get("PI_RAINBOW_DECK_DRY_RUN") == "1"
+    dry_run = local_test_mode
     if not re.fullmatch(r"[0-9a-fA-F]{64}", command_token):
         raise RuntimeError(
             "Set PI_RAINBOW_DECK_COMMAND_TOKEN to the same 64-character hex secret on the host and Pi."
@@ -152,23 +178,11 @@ def main():
                 conn, _ = s.accept()
                 with conn:
                     data = receive_command(conn)
-                    if data:
-                        btn_id = validate_command(data, command_token, used_nonces)
-                        if btn_id is None:
-                            print(
-                                "[WARNING] Rejected unauthenticated or replayed command"
-                            )
-                        else:
-                            action_id = host_actions.get(btn_id)
-                            if action_id:
-                                if dry_run:
-                                    print(
-                                        f"[DRY RUN] Would execute action: {action_id}"
-                                    )
-                                else:
-                                    execute_action(action_id)
-                            else:
-                                print(f"[WARNING] Unmapped button ID: {btn_id}")
+                if data and handle_command(
+                    data, command_token, used_nonces, host_actions, dry_run
+                ):
+                    print("\nStopping bridge server.")
+                    break
             except KeyboardInterrupt:
                 print("\nStopping bridge server.")
                 break

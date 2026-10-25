@@ -11,8 +11,8 @@ import sys
 import threading
 import time
 
-VIRTUAL_HAT = os.environ.get("PI_RAINBOW_DECK_VIRTUAL_HAT") == "1"
-if VIRTUAL_HAT:
+LOCAL_TEST_MODE = os.environ.get("PI_RAINBOW_DECK_LOCAL_TEST") == "1"
+if LOCAL_TEST_MODE:
     if __package__:
         from . import virtual_hat as rh
     else:
@@ -20,7 +20,24 @@ if VIRTUAL_HAT:
 else:
     import rainbowhat as rh
 
-if __package__:
+if LOCAL_TEST_MODE:
+    if __package__:
+        from .virtual_hat import (
+            play_sound,
+            pulse_rainbow,
+            reset_hardware,
+            set_context_gauge,
+            show_display,
+        )
+    else:
+        from virtual_hat import (
+            play_sound,
+            pulse_rainbow,
+            reset_hardware,
+            set_context_gauge,
+            show_display,
+        )
+elif __package__:
     from .hat_hardware import (
         play_sound,
         pulse_rainbow,
@@ -52,7 +69,7 @@ config = load_config()
 active_profile = config.get("active_profile", "SAFETY")
 networking = config.get("networking", {})
 
-HOST_IP = networking.get("host_ip", "192.168.7.1")
+HOST_IP = "127.0.0.1" if LOCAL_TEST_MODE else networking.get("host_ip", "192.168.7.1")
 PORT = networking.get("command_port", 5000)
 TELEMETRY_PORT = networking.get("telemetry_port", 5001)
 COMMAND_TOKEN = os.environ.get("PI_RAINBOW_DECK_COMMAND_TOKEN", "")
@@ -158,8 +175,8 @@ def main():
     rh.rainbow.show()
 
     threading.Thread(target=listen_for_telemetry, daemon=True).start()
-    if VIRTUAL_HAT:
-        rh.run()
+    if LOCAL_TEST_MODE:
+        rh.run(lambda: send_button_press("QUIT"))
     else:
         signal.pause()
 

@@ -1,5 +1,7 @@
+import builtins
 import hashlib
 import hmac
+import importlib
 import json
 import os
 import socket
@@ -102,6 +104,87 @@ def test_pi_command_authenticates_and_dispatches_over_localhost(monkeypatch):
     assert not server.is_alive(), "local command receiver did not finish"
     assert not server_error
     assert received == ["APPROVE"]
+
+
+def test_virtual_hat_button_reaches_host_dry_run_over_localhost(monkeypatch, capsys):
+    from pi_rainbow_deck_host import bridge
+
+    pi_main = _import_pi_main(monkeypatch)
+    monkeypatch.setenv("PI_RAINBOW_DECK_LOCAL_TEST", "1")
+    monkeypatch.setenv("PI_RAINBOW_DECK_COMMAND_TOKEN", TOKEN)
+    pi_main = importlib.reload(pi_main)
+    monkeypatch.setattr(pi_main.time, "sleep", lambda delay: None)
+
+    execute_action = []
+    monkeypatch.setattr(bridge, "execute_action", execute_action.append)
+
+    used_nonces = {}
+    handled = []
+    actions = {"BTN_A": "APPROVE"}
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        host_ip, port = listener.getsockname()
+        monkeypatch.setattr(pi_main, "HOST_IP", host_ip)
+        monkeypatch.setattr(pi_main, "PORT", port)
+
+        def receive_button_press():
+            conn, _ = listener.accept()
+            with conn:
+                data = bridge.receive_command(conn)
+            handled.append(
+                bridge.handle_command(data, TOKEN, used_nonces, actions, dry_run=True)
+            )
+
+        server = threading.Thread(target=receive_button_press)
+        server.start()
+        pi_main.rh.touch.A.press_button()
+        server.join(timeout=3)
+
+    assert not server.is_alive(), "host did not finish after receiving a button"
+    assert handled == [False]
+    assert execute_action == []
+    output = capsys.readouterr().out
+    assert "[DRY RUN] Would execute action: APPROVE" in output
+    assert "[VIRTUAL HAT] red light on" in output
+
+
+def test_virtual_hat_q_sends_authenticated_host_shutdown(monkeypatch, capsys):
+    from pi_rainbow_deck_host import bridge
+
+    pi_main = _import_pi_main(monkeypatch)
+    monkeypatch.setenv("PI_RAINBOW_DECK_LOCAL_TEST", "1")
+    monkeypatch.setenv("PI_RAINBOW_DECK_COMMAND_TOKEN", TOKEN)
+    pi_main = importlib.reload(pi_main)
+    monkeypatch.setattr(builtins, "input", lambda prompt: "q")
+
+    stop_requested = []
+    actions = {"BTN_A": "APPROVE"}
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        host_ip, port = listener.getsockname()
+        monkeypatch.setattr(pi_main, "HOST_IP", host_ip)
+        monkeypatch.setattr(pi_main, "PORT", port)
+
+        def receive_quit_command():
+            conn, _ = listener.accept()
+            with conn:
+                data = bridge.receive_command(conn)
+            stop_requested.append(
+                bridge.handle_command(data, TOKEN, {}, actions, dry_run=True)
+            )
+
+        server = threading.Thread(target=receive_quit_command)
+        server.start()
+        pi_main.rh.run(lambda: pi_main.send_button_press("QUIT"))
+        server.join(timeout=3)
+
+    assert not server.is_alive(), "host did not receive the quit command"
+    assert stop_requested == [True]
+    assert "[INFO] Authenticated host shutdown requested" in capsys.readouterr().out
 
 
 def test_host_rejects_replayed_command():
