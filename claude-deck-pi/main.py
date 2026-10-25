@@ -6,6 +6,11 @@ import socket
 import signal
 import json
 import threading
+import hashlib
+import hmac
+import re
+import secrets
+import sys
 import rainbowhat as rh
 
 from hat_hardware import (
@@ -32,16 +37,32 @@ networking = config.get("networking", {})
 HOST_IP = networking.get("host_ip", "192.168.7.1")
 PORT = networking.get("command_port", 5000)
 TELEMETRY_PORT = networking.get("telemetry_port", 5001)
+COMMAND_TOKEN = os.environ.get("CLAUDE_DECK_COMMAND_TOKEN", "")
 
 PI_UI = config.get("profiles", {}).get(active_profile, {}).get("display", "SAFE")
 UI_LABELS = config.get("profiles", {}).get(active_profile, {})
 
 def send_button_press(button_id: str) -> bool:
     try:
+        payload = {
+            "button_id": button_id,
+            "timestamp": int(time.time()),
+            "nonce": secrets.token_hex(16)
+        }
+        canonical_payload = json.dumps(payload, separators=(",", ":"), sort_keys=True)
+        signature = hmac.new(
+            COMMAND_TOKEN.encode("utf-8"),
+            canonical_payload.encode("utf-8"),
+            hashlib.sha256
+        ).hexdigest()
+        message = json.dumps(
+            {"payload": payload, "signature": signature},
+            separators=(",", ":")
+        ).encode("utf-8")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(2.0)
             s.connect((HOST_IP, PORT))
-            s.sendall(button_id.encode('utf-8'))
+            s.sendall(message + b"\n")
             return True
     except Exception:
         return False
@@ -92,6 +113,13 @@ def cleanup(signum, frame):
     sys.exit(0)
 
 def main():
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", COMMAND_TOKEN):
+        print(
+            "[ERROR] Set CLAUDE_DECK_COMMAND_TOKEN to the same 64-character hex secret "
+            "on the host and Pi."
+        )
+        sys.exit(1)
+
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
 
