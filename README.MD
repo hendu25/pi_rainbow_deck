@@ -112,11 +112,27 @@ uv run pre-commit install
 uv run pre-commit run --all-files
 ```
 
+For one command that runs tests, Ruff, and pre-commit checks, use:
+
+```sh
+uv run python scripts/check.py
+```
+
+Add `--build` to also build the source distribution and wheel:
+
+```sh
+uv run python scripts/check.py --build
+```
+
 The tests use localhost sockets and stub Rainbow HAT, so they require neither a Pi nor physical hardware or real keystroke injection. Pre-commit runs Ruff linting/formatting and standard YAML/TOML, whitespace, merge-conflict, and large-file checks.
 
 ## 🔐 Secure the command connection
 
 The host bridge accepts authenticated commands that inject keystrokes into the active application. It requires a valid shared secret, verifies command signatures and timestamps, and rejects replayed commands. The bridge binds only to the address configured as `networking.host_ip` in `src/claude_deck_host/config.json`.
+
+## License
+
+This project is licensed under the GNU General Public License, version 3 or (at your option) any later version. See [LICENSE](LICENSE) for the complete license text.
 
 ---
 
