@@ -138,6 +138,8 @@ The host bridge accepts authenticated commands that inject keystrokes into the a
 
 This project is licensed under the GNU General Public License, version 3 or (at your option) any later version. See [LICENSE](LICENSE) for the complete license text.
 
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 ---
 
 ## 📁 Repository Structure
@@ -145,6 +147,7 @@ This project is licensed under the GNU General Public License, version 3 or (at 
 ```text
 pi-rainbow-deck/
 ├── README.MD                 # Project documentation
+├── CHANGELOG.md              # Release history
 ├── CONTRIBUTING.md           # Contributor setup and pull request guide
 ├── deploy.sh                 # One-click deployment script (rsync to Pi Zero)
 ├── LICENSE                   # GPL-3.0-or-later
