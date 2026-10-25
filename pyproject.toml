@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claude-deck"
+version = "0.1.0"
+description = "Raspberry Pi macro pad and host bridge for Claude Code"
+readme = "README.MD"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+host = [
+    "pyautogui>=0.9.54; sys_platform == 'win32'",
+]
+pi = [
+    "rainbowhat",
+]
+
+[project.scripts]
+claude-deck-host = "claude_deck_host.bridge:main"
+claude-deck-pi = "claude_deck_pi.main:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claude_deck_host", "src/claude_deck_pi"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

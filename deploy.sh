@@ -2,7 +2,7 @@
 
 # ==============================================================================
 # Deploy Script for Claude Deck Pi
-# Syncs local claude-deck-pi/ to Pi Zero over SSH and restarts the daemon.
+# Syncs the Pi package from src/ to Pi Zero over SSH and restarts the daemon.
 # ==============================================================================
 
 # Configuration (adjust host/IP if using a static IP like 192.168.7.2)
@@ -13,7 +13,7 @@ SERVICE_NAME="claude-deck.service"
 
 # Resolve local source directory relative to this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_DIR="${SCRIPT_DIR}/claude-deck-pi"
+SOURCE_DIR="${SCRIPT_DIR}/src/claude_deck_pi"
 
 # Verify source folder exists
 if [ ! -d "$SOURCE_DIR" ]; then

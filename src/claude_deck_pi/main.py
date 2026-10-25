@@ -10,16 +10,24 @@ import hashlib
 import hmac
 import re
 import secrets
-import sys
 import rainbowhat as rh
 
-from hat_hardware import (
-    play_sound,
-    show_display,
-    set_context_gauge,
-    pulse_rainbow,
-    reset_hardware
-)
+if __package__:
+    from .hat_hardware import (
+        play_sound,
+        show_display,
+        set_context_gauge,
+        pulse_rainbow,
+        reset_hardware
+    )
+else:
+    from hat_hardware import (
+        play_sound,
+        show_display,
+        set_context_gauge,
+        pulse_rainbow,
+        reset_hardware
+    )
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 

@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-import importlib.util
 import json
 import os
 import socket
@@ -15,25 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TOKEN = "a" * 64
 
 
-def _load_module(name, path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def _import_host_bridge():
-    keystrokes = types.ModuleType("keystrokes")
-    keystrokes.execute_action = lambda action: None
-    log_monitor = types.ModuleType("log_monitor")
-    log_monitor.start_log_monitor = lambda *args: None
-    sys.modules["keystrokes"] = keystrokes
-    sys.modules["log_monitor"] = log_monitor
-    sys.path.insert(0, str(ROOT / "claude-deck-host"))
-    return _load_module("test_host_bridge", ROOT / "claude-deck-host" / "bridge.py")
-
-
-def _import_pi_main():
+def _import_pi_main(monkeypatch):
     class TouchButton:
         def press(self):
             return lambda callback: callback
@@ -46,7 +27,7 @@ def _import_pi_main():
         red=object(), green=object(), blue=object()
     )
     rainbowhat.rainbow = object()
-    sys.modules["rainbowhat"] = rainbowhat
+    monkeypatch.setitem(sys.modules, "rainbowhat", rainbowhat)
 
     hardware = types.ModuleType("hat_hardware")
     hardware.play_sound = lambda *args: None
@@ -54,21 +35,18 @@ def _import_pi_main():
     hardware.set_context_gauge = lambda *args: None
     hardware.pulse_rainbow = lambda *args: None
     hardware.reset_hardware = lambda *args: None
-    sys.modules["hat_hardware"] = hardware
+    monkeypatch.setitem(sys.modules, "claude_deck_pi.hat_hardware", hardware)
 
     previous_token = os.environ.get("CLAUDE_DECK_COMMAND_TOKEN")
     os.environ["CLAUDE_DECK_COMMAND_TOKEN"] = TOKEN
     try:
-        return _load_module("test_pi_main", ROOT / "claude-deck-pi" / "main.py")
+        from claude_deck_pi import main
+        return main
     finally:
         if previous_token is None:
             os.environ.pop("CLAUDE_DECK_COMMAND_TOKEN", None)
         else:
             os.environ["CLAUDE_DECK_COMMAND_TOKEN"] = previous_token
-
-
-bridge = _import_host_bridge()
-pi_main = _import_pi_main()
 
 
 def signed_command(button_id="BTN_A", timestamp=None, token=TOKEN, **extra_fields):
@@ -88,8 +66,13 @@ def signed_command(button_id="BTN_A", timestamp=None, token=TOKEN, **extra_field
     ).encode("utf-8")
 
 
-def test_pi_command_authenticates_and_dispatches_over_localhost():
-    config = json.loads((ROOT / "claude-deck-host" / "config.json").read_text())
+def test_pi_command_authenticates_and_dispatches_over_localhost(monkeypatch):
+    from claude_deck_host import bridge
+
+    pi_main = _import_pi_main(monkeypatch)
+    config = json.loads(
+        (ROOT / "src" / "claude_deck_host" / "config.json").read_text()
+    )
     actions = config["profiles"]["SAFETY"]
     used_nonces = {}
 
@@ -122,6 +105,8 @@ def test_pi_command_authenticates_and_dispatches_over_localhost():
 
 
 def test_host_rejects_replayed_command():
+    from claude_deck_host import bridge
+
     packet = signed_command()
     used_nonces = {}
 
@@ -130,6 +115,8 @@ def test_host_rejects_replayed_command():
 
 
 def test_host_rejects_invalid_signature():
+    from claude_deck_host import bridge
+
     packet = json.loads(signed_command())
     packet["signature"] = "0" * 64
 
@@ -139,17 +126,23 @@ def test_host_rejects_invalid_signature():
 
 
 def test_host_rejects_expired_command():
+    from claude_deck_host import bridge
+
     packet = signed_command(timestamp=int(time.time()) - 60)
 
     assert bridge.validate_command(packet, TOKEN, {}) is None
 
 
 def test_host_rejects_malformed_command():
+    from claude_deck_host import bridge
+
     assert bridge.validate_command(b"not-json", TOKEN, {}) is None
     assert bridge.validate_command(signed_command(extra_fields={"unexpected": 1}), TOKEN, {}) is None
 
 
 def test_receive_command_reads_newline_terminated_message():
+    from claude_deck_host import bridge
+
     sender, receiver = socket.socketpair()
     try:
         sender.sendall(b'{"command":"ok"}\n')

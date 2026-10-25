@@ -7,8 +7,12 @@ import hmac
 import re
 import time
 
-from keystrokes import execute_action
-from log_monitor import start_log_monitor
+if __package__:
+    from .keystrokes import execute_action
+    from .log_monitor import start_log_monitor
+else:
+    from keystrokes import execute_action
+    from log_monitor import start_log_monitor
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 MAX_COMMAND_BYTES = 4096
