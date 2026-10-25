@@ -4,6 +4,13 @@ import types
 
 import pytest
 
+if sys.platform.startswith("linux"):
+    pyautogui = types.ModuleType("pyautogui")
+    pyautogui.typewrite = lambda *args, **kwargs: None
+    pyautogui.press = lambda *args, **kwargs: None
+    pyautogui.hotkey = lambda *args, **kwargs: None
+    sys.modules.setdefault("pyautogui", pyautogui)
+
 
 @pytest.fixture
 def fake_rainbowhat(monkeypatch):

@@ -1,5 +1,7 @@
 # 🌈 Pi Rainbow Deck
 
+[![CI](https://github.com/hendu25/pi_rainbow_deck/actions/workflows/ci.yml/badge.svg)](https://github.com/hendu25/pi_rainbow_deck/actions/workflows/ci.yml)
+
 A dedicated hardware macro pad and telemetry monitor for **Claude Code** sessions built with a **Raspberry Pi Zero** and a **Pimoroni Rainbow HAT**.
 
 Pi Rainbow Deck connects to your host machine (Windows, macOS, or Linux) over **USB Gadget Mode** (Ethernet-over-USB) or Wi-Fi. It gives you physical touch buttons for rapid action approvals, audio feedback via the onboard piezo buzzer, and real-time session stats (token counts and context window fill gauges) parsed from live Claude Code logs. This is an independent community project and is not affiliated with or endorsed by Anthropic.
@@ -126,6 +128,8 @@ uv run python scripts/check.py --build
 
 The tests use localhost sockets and stub Rainbow HAT, so they require neither a Pi nor physical hardware or real keystroke injection. Pre-commit runs Ruff linting/formatting and standard YAML/TOML, whitespace, merge-conflict, and large-file checks.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the fork, branch, and pull request workflow.
+
 ## 🔐 Secure the command connection
 
 The host bridge accepts authenticated commands that inject keystrokes into the active application. It requires a valid shared secret, verifies command signatures and timestamps, and rejects replayed commands. The bridge binds only to the address configured as `networking.host_ip` in `src/pi_rainbow_deck_host/config.json`.
@@ -141,6 +145,7 @@ This project is licensed under the GNU General Public License, version 3 or (at 
 ```text
 pi-rainbow-deck/
 ├── README.MD                 # Project documentation
+├── CONTRIBUTING.md           # Contributor setup and pull request guide
 ├── deploy.sh                 # One-click deployment script (rsync to Pi Zero)
 ├── LICENSE                   # GPL-3.0-or-later
 ├── pyproject.toml            # Project metadata and dependency groups
