@@ -97,6 +97,7 @@ def main():
     telemetry_port = networking.get("telemetry_port", 5001)
     context_limit = claude_cfg.get("context_window_limit", 200000)
     command_token = os.environ.get("PI_RAINBOW_DECK_COMMAND_TOKEN", "")
+    dry_run = os.environ.get("PI_RAINBOW_DECK_DRY_RUN") == "1"
     if not re.fullmatch(r"[0-9a-fA-F]{64}", command_token):
         raise RuntimeError(
             "Set PI_RAINBOW_DECK_COMMAND_TOKEN to the same 64-character hex secret on the host and Pi."
@@ -104,6 +105,10 @@ def main():
 
     print("=" * 60)
     print(f"Claude Host Bridge [{sys.platform.upper()}] | Profile: [{active_profile}]")
+    if dry_run:
+        print(
+            "Dry-run enabled: mapped actions will be logged without injecting keystrokes."
+        )
     print(f"Keybindings: {host_actions}")
     print("=" * 60)
 
@@ -156,7 +161,12 @@ def main():
                         else:
                             action_id = host_actions.get(btn_id)
                             if action_id:
-                                execute_action(action_id)
+                                if dry_run:
+                                    print(
+                                        f"[DRY RUN] Would execute action: {action_id}"
+                                    )
+                                else:
+                                    execute_action(action_id)
                             else:
                                 print(f"[WARNING] Unmapped button ID: {btn_id}")
             except KeyboardInterrupt:

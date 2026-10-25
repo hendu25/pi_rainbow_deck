@@ -120,6 +120,42 @@ For one command that runs tests, Ruff, and pre-commit checks, use:
 uv run python scripts/check.py
 ```
 
+### Try the host and Pi apps without a Rainbow HAT
+
+The Pi app includes a console-based virtual HAT for local integration testing.
+It sends the same authenticated button commands as the physical HAT. The host
+dry-run mode logs mapped actions instead of injecting keystrokes into the
+currently focused application.
+
+1. In both `src/pi_rainbow_deck_host/config.json` and
+   `src/pi_rainbow_deck_pi/config.json`, temporarily set `networking.host_ip`
+   to `127.0.0.1`. In the host config, also set `networking.pi_ip` to
+   `127.0.0.1`. Leave the command and telemetry ports unchanged.
+2. Open a terminal for the host app, set the same 64-character test token
+   required by both apps, and enable dry-run mode:
+
+   ```powershell
+   $env:PI_RAINBOW_DECK_COMMAND_TOKEN = "<64-character-test-secret>"
+   $env:PI_RAINBOW_DECK_DRY_RUN = "1"
+   uv run --extra host pi-rainbow-deck-host
+   ```
+
+3. In a second terminal, set the same token and start the virtual HAT:
+
+   ```powershell
+   $env:PI_RAINBOW_DECK_COMMAND_TOKEN = "<64-character-test-secret>"
+   $env:PI_RAINBOW_DECK_VIRTUAL_HAT = "1"
+   uv run pi-rainbow-deck-pi
+   ```
+
+4. Enter `A`, `B`, or `C` in the Pi terminal. The virtual HAT displays feedback,
+   and the host terminal logs the mapped action without pressing keys. Enter
+   `Q` to stop the virtual HAT. Restore the config values when finished.
+
+This local setup uses the configured ports, so stop any other app instances
+using those ports first. The virtual HAT environment variable is opt-in; without
+it, the Pi app continues to use the physical Rainbow HAT.
+
 Add `--build` to also build the source distribution and wheel:
 
 ```sh

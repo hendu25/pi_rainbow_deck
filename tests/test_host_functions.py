@@ -89,7 +89,10 @@ def test_bridge_receive_command_sets_timeout_and_rejects_oversized_data():
         bridge.receive_command(conn)
 
 
-def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(
+    monkeypatch, capsys, dry_run
+):
     valid = _signed_command(nonce="2" * 32)
     unmapped = _signed_command("BTN_UNKNOWN", nonce="3" * 32)
     invalid = b"not-json"
@@ -151,6 +154,7 @@ def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
         },
     )
     monkeypatch.setenv("PI_RAINBOW_DECK_COMMAND_TOKEN", TOKEN)
+    monkeypatch.setenv("PI_RAINBOW_DECK_DRY_RUN", "1" if dry_run else "0")
     monkeypatch.setattr(bridge.socket, "socket", lambda *args: listener)
     thread = SimpleNamespace(start=Mock())
     monkeypatch.setattr(bridge.threading, "Thread", lambda **kwargs: thread)
@@ -160,7 +164,11 @@ def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
     bridge.main()
 
     assert listener.bind_address == ("127.0.0.1", 0)
-    action.assert_called_once_with("APPROVE")
+    if dry_run:
+        action.assert_not_called()
+        assert "[DRY RUN] Would execute action: APPROVE" in capsys.readouterr().out
+    else:
+        action.assert_called_once_with("APPROVE")
     thread.start.assert_called_once()
 
 
