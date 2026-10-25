@@ -35,14 +35,14 @@ def fake_rainbowhat(monkeypatch):
     )
     hat.touch = types.SimpleNamespace(A=TouchButton(), B=TouchButton(), C=TouchButton())
     monkeypatch.setitem(sys.modules, "rainbowhat", hat)
-    monkeypatch.delitem(sys.modules, "claude_deck_pi.main", raising=False)
-    monkeypatch.delitem(sys.modules, "claude_deck_pi.hat_hardware", raising=False)
+    monkeypatch.delitem(sys.modules, "pi_rainbow_deck_pi.main", raising=False)
+    monkeypatch.delitem(sys.modules, "pi_rainbow_deck_pi.hat_hardware", raising=False)
     return hat
 
 
 @pytest.fixture
 def pi_modules(monkeypatch, fake_rainbowhat):
     monkeypatch.setenv("CLAUDE_DECK_COMMAND_TOKEN", "a" * 64)
-    hardware = importlib.import_module("claude_deck_pi.hat_hardware")
-    main = importlib.import_module("claude_deck_pi.main")
+    hardware = importlib.import_module("pi_rainbow_deck_pi.hat_hardware")
+    main = importlib.import_module("pi_rainbow_deck_pi.main")
     return main, hardware, fake_rainbowhat

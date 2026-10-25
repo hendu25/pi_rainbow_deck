@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "claude-deck"
+name = "pi-rainbow-deck"
 version = "0.1.0"
-description = "Raspberry Pi macro pad and host bridge for Claude Code"
+description = "Pi Rainbow Deck macro pad and host bridge for Claude Code"
 readme = "README.MD"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.9"
@@ -20,8 +20,8 @@ pi = [
 ]
 
 [project.scripts]
-claude-deck-host = "claude_deck_host.bridge:main"
-claude-deck-pi = "claude_deck_pi.main:main"
+pi-rainbow-deck-host = "pi_rainbow_deck_host.bridge:main"
+pi-rainbow-deck-pi = "pi_rainbow_deck_pi.main:main"
 
 [dependency-groups]
 dev = [
@@ -31,7 +31,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/claude_deck_host", "src/claude_deck_pi"]
+packages = ["src/pi_rainbow_deck_host", "src/pi_rainbow_deck_pi"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

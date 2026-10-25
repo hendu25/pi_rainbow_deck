@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run Claude Deck tests and quality checks."
+        description="Run Pi Rainbow Deck tests and quality checks."
     )
     parser.add_argument(
         "--build",

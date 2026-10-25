@@ -1,8 +1,8 @@
-# 🌈 Claude Deck
+# 🌈 Pi Rainbow Deck
 
 A dedicated hardware macro pad and telemetry monitor for **Claude Code** sessions built with a **Raspberry Pi Zero** and a **Pimoroni Rainbow HAT**.
 
-Claude Deck connects to your host machine (Windows, macOS, or Linux) over **USB Gadget Mode** (Ethernet-over-USB) or Wi-Fi. It gives you physical touch buttons for rapid action approvals, audio feedback via the onboard piezo buzzer, and real-time session stats (token counts and context window fill gauges) parsed from live Claude Code logs.
+Pi Rainbow Deck connects to your host machine (Windows, macOS, or Linux) over **USB Gadget Mode** (Ethernet-over-USB) or Wi-Fi. It gives you physical touch buttons for rapid action approvals, audio feedback via the onboard piezo buzzer, and real-time session stats (token counts and context window fill gauges) parsed from live Claude Code logs. This is an independent community project and is not affiliated with or endorsed by Anthropic.
 
 ## 🚀 Getting started
 
@@ -27,8 +27,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 Clone the repository on your host, open a terminal in the checkout, and install the host dependencies:
 
 ```sh
-git clone https://github.com/hendu25/pi_rainbow_deck.git claude-deck
-cd claude-deck
+git clone https://github.com/hendu25/pi_rainbow_deck.git pi-rainbow-deck
+cd pi-rainbow-deck
 uv sync --extra host
 ```
 
@@ -43,7 +43,7 @@ The Linux host must have an active X11 session; Wayland-only sessions are not su
 
 ### 3. Configure the network and shared secret
 
-Choose a host interface reachable from the Pi. Set `networking.host_ip` in `src/claude_deck_host/config.json` to the host's address, and set `networking.host_ip` in `src/claude_deck_pi/config.json` to that same address. The sample `192.168.7.1` is for USB Ethernet gadget networking; use the appropriate host address for Wi-Fi. Keep the configured command port reachable from the Pi.
+Choose a host interface reachable from the Pi. Set `networking.host_ip` in `src/pi_rainbow_deck_host/config.json` to the host's address, and set `networking.host_ip` in `src/pi_rainbow_deck_pi/config.json` to that same address. The sample `192.168.7.1` is for USB Ethernet gadget networking; use the appropriate host address for Wi-Fi. Keep the configured command port reachable from the Pi.
 
 Generate a secret on the host:
 
@@ -66,7 +66,7 @@ export CLAUDE_DECK_COMMAND_TOKEN="<generated-secret>"
 Start the host bridge in that same terminal:
 
 ```sh
-uv run claude-deck-host
+uv run pi-rainbow-deck-host
 ```
 
 On Windows, the host uses PyAutoGUI. macOS uses `osascript` and may prompt you to grant Accessibility permission to the terminal or Python. Linux uses PyAutoGUI with X11.
@@ -76,8 +76,8 @@ On Windows, the host uses PyAutoGUI. macOS uses `osascript` and may prompt you t
 Use Raspberry Pi OS with Python 3.9 or later, enable the Rainbow HAT/I²C support as required by the OS, and clone the same repository on the Pi:
 
 ```sh
-git clone https://github.com/hendu25/pi_rainbow_deck.git claude-deck
-cd claude-deck
+git clone https://github.com/hendu25/pi_rainbow_deck.git pi-rainbow-deck
+cd pi-rainbow-deck
 ```
 
 If uv is available for the Pi's OS and CPU architecture, install the Pi runtime and HAT dependency:
@@ -85,7 +85,7 @@ If uv is available for the Pi's OS and CPU architecture, install the Pi runtime 
 ```sh
 uv sync --no-dev --extra pi
 export CLAUDE_DECK_COMMAND_TOKEN="<same-generated-secret>"
-uv run --no-sync claude-deck-pi
+uv run --no-sync pi-rainbow-deck-pi
 ```
 
 Some original Raspberry Pi Zero (ARMv6) images may not have a compatible uv binary. In that case, use Python's virtual environment and pip:
@@ -96,10 +96,10 @@ python3 -m venv .venv
 python -m pip install --upgrade pip
 python -m pip install '.[pi]'
 export CLAUDE_DECK_COMMAND_TOKEN="<same-generated-secret>"
-claude-deck-pi
+pi-rainbow-deck-pi
 ```
 
-For a persistent systemd service, configure its `ExecStart` to use the installed environment's `claude-deck-pi` command, and set `CLAUDE_DECK_COMMAND_TOKEN` with a private systemd override (for example, `sudo systemctl edit claude-deck.service`). Restrict access to the override and restart the service after updating it. The optional `deploy.sh` script syncs the Pi package to its configured target and restarts that existing service.
+For a persistent systemd service, configure its `ExecStart` to use the installed environment's `pi-rainbow-deck-pi` command, and set `CLAUDE_DECK_COMMAND_TOKEN` with a private systemd override (for example, `sudo systemctl edit claude-deck.service`). Restrict access to the override and restart the service after updating it. The optional `deploy.sh` script syncs the Pi package to its configured target and restarts that existing service. The target directory and service name retain their historical `claude-deck` identifiers for compatibility with existing Pi installs.
 
 ### 5. Run tests (optional)
 
@@ -128,7 +128,7 @@ The tests use localhost sockets and stub Rainbow HAT, so they require neither a 
 
 ## 🔐 Secure the command connection
 
-The host bridge accepts authenticated commands that inject keystrokes into the active application. It requires a valid shared secret, verifies command signatures and timestamps, and rejects replayed commands. The bridge binds only to the address configured as `networking.host_ip` in `src/claude_deck_host/config.json`.
+The host bridge accepts authenticated commands that inject keystrokes into the active application. It requires a valid shared secret, verifies command signatures and timestamps, and rejects replayed commands. The bridge binds only to the address configured as `networking.host_ip` in `src/pi_rainbow_deck_host/config.json`.
 
 ## License
 
@@ -139,19 +139,19 @@ This project is licensed under the GNU General Public License, version 3 or (at 
 ## 📁 Repository Structure
 
 ```text
-claude-deck/
+pi-rainbow-deck/
 ├── README.MD                 # Project documentation
 ├── deploy.sh                 # One-click deployment script (rsync to Pi Zero)
 ├── LICENSE                   # GPL-3.0-or-later
 ├── pyproject.toml            # Project metadata and dependency groups
 ├── uv.lock                   # Reproducible uv dependency lockfile
 ├── src/
-│   ├── claude_deck_host/     # Host Machine Service (Windows / macOS / Linux)
+│   ├── pi_rainbow_deck_host/ # Host Machine Service (Windows / macOS / Linux)
 │   │   ├── config.json       # Profile & network settings
 │   │   ├── keystrokes.py     # Cross-platform OS key injection
 │   │   ├── log_monitor.py    # Real-time ~/.claude/ log parser
 │   │   └── bridge.py         # Main socket server & entry point
-│   └── claude_deck_pi/       # Pi Zero Daemon Service
+│   └── pi_rainbow_deck_pi/   # Pi Zero Daemon Service
 │       ├── config.json       # UI & network settings
 │       ├── hat_hardware.py   # Hardware abstraction (Buzzer, LEDs, Display)
 │       └── main.py           # Touch button event loop & telemetry subscriber

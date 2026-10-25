@@ -34,12 +34,12 @@ def _import_pi_main(monkeypatch):
     hardware.set_context_gauge = lambda *args: None
     hardware.pulse_rainbow = lambda *args: None
     hardware.reset_hardware = lambda *args: None
-    monkeypatch.setitem(sys.modules, "claude_deck_pi.hat_hardware", hardware)
+    monkeypatch.setitem(sys.modules, "pi_rainbow_deck_pi.hat_hardware", hardware)
 
     previous_token = os.environ.get("CLAUDE_DECK_COMMAND_TOKEN")
     os.environ["CLAUDE_DECK_COMMAND_TOKEN"] = TOKEN
     try:
-        from claude_deck_pi import main
+        from pi_rainbow_deck_pi import main
 
         return main
     finally:
@@ -67,10 +67,12 @@ def signed_command(button_id="BTN_A", timestamp=None, token=TOKEN, **extra_field
 
 
 def test_pi_command_authenticates_and_dispatches_over_localhost(monkeypatch):
-    from claude_deck_host import bridge
+    from pi_rainbow_deck_host import bridge
 
     pi_main = _import_pi_main(monkeypatch)
-    config = json.loads((ROOT / "src" / "claude_deck_host" / "config.json").read_text())
+    config = json.loads(
+        (ROOT / "src" / "pi_rainbow_deck_host" / "config.json").read_text()
+    )
     actions = config["profiles"]["SAFETY"]
     used_nonces = {}
 
@@ -103,7 +105,7 @@ def test_pi_command_authenticates_and_dispatches_over_localhost(monkeypatch):
 
 
 def test_host_rejects_replayed_command():
-    from claude_deck_host import bridge
+    from pi_rainbow_deck_host import bridge
 
     packet = signed_command()
     used_nonces = {}
@@ -113,7 +115,7 @@ def test_host_rejects_replayed_command():
 
 
 def test_host_rejects_invalid_signature():
-    from claude_deck_host import bridge
+    from pi_rainbow_deck_host import bridge
 
     packet = json.loads(signed_command())
     packet["signature"] = "0" * 64
@@ -124,7 +126,7 @@ def test_host_rejects_invalid_signature():
 
 
 def test_host_rejects_expired_command():
-    from claude_deck_host import bridge
+    from pi_rainbow_deck_host import bridge
 
     packet = signed_command(timestamp=int(time.time()) - 60)
 
@@ -132,7 +134,7 @@ def test_host_rejects_expired_command():
 
 
 def test_host_rejects_malformed_command():
-    from claude_deck_host import bridge
+    from pi_rainbow_deck_host import bridge
 
     assert bridge.validate_command(b"not-json", TOKEN, {}) is None
     assert (
@@ -144,7 +146,7 @@ def test_host_rejects_malformed_command():
 
 
 def test_receive_command_reads_newline_terminated_message():
-    from claude_deck_host import bridge
+    from pi_rainbow_deck_host import bridge
 
     sender, receiver = socket.socketpair()
     try:

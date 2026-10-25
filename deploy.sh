@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ==============================================================================
-# Deploy Script for Claude Deck Pi
+# Deploy Script for Pi Rainbow Deck
 # Syncs the Pi package from src/ to Pi Zero over SSH and restarts the daemon.
 # ==============================================================================
 
@@ -13,7 +13,7 @@ SERVICE_NAME="claude-deck.service"
 
 # Resolve local source directory relative to this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_DIR="${SCRIPT_DIR}/src/claude_deck_pi"
+SOURCE_DIR="${SCRIPT_DIR}/src/pi_rainbow_deck_pi"
 
 # Verify source folder exists
 if [ ! -d "$SOURCE_DIR" ]; then

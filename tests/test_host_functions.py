@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from claude_deck_host import bridge, keystrokes, log_monitor
+from pi_rainbow_deck_host import bridge, keystrokes, log_monitor
 
 ROOT = Path(__file__).resolve().parents[1]
 TOKEN = "a" * 64
