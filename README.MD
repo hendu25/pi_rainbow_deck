@@ -142,6 +142,7 @@ This project is licensed under the GNU General Public License, version 3 or (at 
 claude-deck/
 ├── README.MD                 # Project documentation
 ├── deploy.sh                 # One-click deployment script (rsync to Pi Zero)
+├── LICENSE                   # GPL-3.0-or-later
 ├── pyproject.toml            # Project metadata and dependency groups
 ├── uv.lock                   # Reproducible uv dependency lockfile
 ├── src/
