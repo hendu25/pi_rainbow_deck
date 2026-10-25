@@ -1,0 +1,29 @@
+{
+  "active_profile": "SAFETY",
+  "networking": {
+    "host_ip": "192.168.7.1",
+    "pi_ip": "192.168.7.2",
+    "command_port": 5000,
+    "telemetry_port": 5001
+  },
+  "claude": {
+    "context_window_limit": 200000
+  },
+  "profiles": {
+    "SAFETY": {
+      "BTN_A": "APPROVE",
+      "BTN_B": "DIFF",
+      "BTN_C": "REWIND"
+    },
+    "CONTEXT": {
+      "BTN_A": "APPROVE",
+      "BTN_B": "COMPACT",
+      "BTN_C": "COST"
+    },
+    "AGENTS": {
+      "BTN_A": "APPROVE",
+      "BTN_B": "TASKS",
+      "BTN_C": "ABORT"
+    }
+  }
+}

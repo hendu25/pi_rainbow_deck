@@ -1,0 +1,28 @@
+{
+  "active_profile": "SAFETY",
+  "networking": {
+    "host_ip": "192.168.7.1",
+    "command_port": 5000,
+    "telemetry_port": 5001
+  },
+  "profiles": {
+    "SAFETY": {
+      "display": "SAFE",
+      "A_label": "Y   ",
+      "B_label": "DIFF",
+      "C_label": "REW "
+    },
+    "CONTEXT": {
+      "display": "CXT ",
+      "A_label": "Y   ",
+      "B_label": "CMP ",
+      "C_label": "COST"
+    },
+    "AGENTS": {
+      "display": "AGNT",
+      "A_label": "Y   ",
+      "B_label": "TSK ",
+      "C_label": "STOP"
+    }
+  }
+}
