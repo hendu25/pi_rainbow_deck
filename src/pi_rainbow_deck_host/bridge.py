@@ -1,3 +1,4 @@
+import errno
 import hmac
 import json
 import os
@@ -104,21 +105,41 @@ def main():
     print("=" * 60)
     print(f"Claude Host Bridge [{sys.platform.upper()}] | Profile: [{active_profile}]")
     print(f"Keybindings: {host_actions}")
-    print(f"Listening on {host_ip}:{port}...")
     print("=" * 60)
-
-    # Start background log monitor
-    threading.Thread(
-        target=start_log_monitor,
-        args=(pi_ip, telemetry_port, context_limit),
-        daemon=True,
-    ).start()
 
     # Main Command Socket Listener
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind((host_ip, port))
-        s.listen()
+        try:
+            s.bind((host_ip, port))
+            s.listen()
+        except OSError as exc:
+            if (
+                getattr(exc, "winerror", None) == 10049
+                or exc.errno == errno.EADDRNOTAVAIL
+            ):
+                print(
+                    f"[ERROR] Host IP {host_ip} is not assigned to this computer. "
+                    "Connect/configure the network adapter for the Pi, or set "
+                    "networking.host_ip in src/pi_rainbow_deck_host/config.json "
+                    "to this computer's reachable IPv4 address (check `ipconfig`)."
+                )
+            else:
+                print(
+                    f"[ERROR] Could not listen on {host_ip}:{port}: {exc}. "
+                    "Check the configured host IP and port."
+                )
+            raise SystemExit(1) from None
+
+        print(f"Listening on {host_ip}:{port}...")
+
+        # Start background log monitor only after the command listener is ready.
+        threading.Thread(
+            target=start_log_monitor,
+            args=(pi_ip, telemetry_port, context_limit),
+            daemon=True,
+        ).start()
+
         used_nonces = {}
 
         while True:

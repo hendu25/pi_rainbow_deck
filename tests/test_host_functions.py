@@ -1,3 +1,4 @@
+import errno
 import json
 import time
 from pathlib import Path
@@ -168,6 +169,40 @@ def test_bridge_main_rejects_missing_token_before_starting(monkeypatch):
     monkeypatch.delenv("PI_RAINBOW_DECK_COMMAND_TOKEN", raising=False)
     with pytest.raises(RuntimeError, match="PI_RAINBOW_DECK_COMMAND_TOKEN"):
         bridge.main()
+
+
+def test_bridge_main_explains_unavailable_host_address(monkeypatch, capsys):
+    class Listener:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def setsockopt(self, *args):
+            pass
+
+        def bind(self, address):
+            raise OSError(errno.EADDRNOTAVAIL, "address not available")
+
+    monkeypatch.setattr(
+        bridge,
+        "load_config",
+        lambda: {
+            "networking": {"host_ip": "192.168.7.1", "command_port": 5000},
+        },
+    )
+    monkeypatch.setenv("PI_RAINBOW_DECK_COMMAND_TOKEN", TOKEN)
+    monkeypatch.setattr(bridge.socket, "socket", lambda *args: Listener())
+    thread = SimpleNamespace(start=Mock())
+    monkeypatch.setattr(bridge.threading, "Thread", lambda **kwargs: thread)
+
+    with pytest.raises(SystemExit) as exc:
+        bridge.main()
+
+    assert exc.value.code == 1
+    assert "192.168.7.1 is not assigned to this computer" in capsys.readouterr().out
+    thread.start.assert_not_called()
 
 
 @pytest.mark.parametrize(

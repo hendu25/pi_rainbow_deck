@@ -45,7 +45,7 @@ The Linux host must have an active X11 session; Wayland-only sessions are not su
 
 ### 3. Configure the network and shared secret
 
-Choose a host interface reachable from the Pi. Set `networking.host_ip` in `src/pi_rainbow_deck_host/config.json` to the host's address, and set `networking.host_ip` in `src/pi_rainbow_deck_pi/config.json` to that same address. The sample `192.168.7.1` is for USB Ethernet gadget networking; use the appropriate host address for Wi-Fi. Keep the configured command port reachable from the Pi.
+Choose a host interface reachable from the Pi. Set `networking.host_ip` in `src/pi_rainbow_deck_host/config.json` to the host's address, and set `networking.host_ip` in `src/pi_rainbow_deck_pi/config.json` to that same address. The sample `192.168.7.1` is for USB Ethernet gadget networking; it must be assigned to the host's USB Ethernet adapter, or replaced with the appropriate host address for Wi-Fi. On Windows, use `ipconfig` to find the adapter address. Keep the configured command port reachable from the Pi.
 
 Generate a secret on the host:
 
