@@ -1,3 +1,4 @@
+import builtins
 import json
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -30,6 +31,22 @@ def test_pi_send_button_press_returns_false_when_connection_fails(
 
     monkeypatch.setattr(main.socket, "socket", fail_socket)
     assert main.send_button_press("BTN_A") is False
+
+
+def test_virtual_hat_dispatches_selected_button(monkeypatch, capsys):
+    from pi_rainbow_deck_pi import virtual_hat
+
+    calls = []
+    monkeypatch.setattr(
+        virtual_hat.touch.A, "callback", lambda channel: calls.append(channel)
+    )
+    selections = iter(["a", "q"])
+    monkeypatch.setattr(builtins, "input", lambda prompt: next(selections))
+
+    virtual_hat.run()
+
+    assert calls == ["virtual"]
+    assert "Press A, B, or C" in capsys.readouterr().out
 
 
 def test_pi_listen_for_telemetry_routes_context_and_token(pi_modules, monkeypatch):

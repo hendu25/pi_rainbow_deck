@@ -11,7 +11,14 @@ import sys
 import threading
 import time
 
-import rainbowhat as rh
+VIRTUAL_HAT = os.environ.get("PI_RAINBOW_DECK_VIRTUAL_HAT") == "1"
+if VIRTUAL_HAT:
+    if __package__:
+        from . import virtual_hat as rh
+    else:
+        import virtual_hat as rh
+else:
+    import rainbowhat as rh
 
 if __package__:
     from .hat_hardware import (
@@ -151,7 +158,10 @@ def main():
     rh.rainbow.show()
 
     threading.Thread(target=listen_for_telemetry, daemon=True).start()
-    signal.pause()
+    if VIRTUAL_HAT:
+        rh.run()
+    else:
+        signal.pause()
 
 
 if __name__ == "__main__":
