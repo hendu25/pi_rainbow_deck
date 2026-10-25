@@ -1,5 +1,3 @@
-from unittest.mock import Mock, call
-
 import pytest
 
 
@@ -26,25 +24,33 @@ def test_show_display_clears_and_shows_uppercase_four_character_text(pi_modules)
     [
         (0, 0, []),
         (50, 4, [(0, 255, 0), (0, 255, 0), (0, 255, 0), (255, 180, 0)]),
-        (100, 7, [
-            (0, 255, 0),
-            (0, 255, 0),
-            (0, 255, 0),
-            (255, 180, 0),
-            (255, 180, 0),
-            (255, 0, 0),
-            (255, 0, 0),
-        ]),
+        (
+            100,
+            7,
+            [
+                (0, 255, 0),
+                (0, 255, 0),
+                (0, 255, 0),
+                (255, 180, 0),
+                (255, 180, 0),
+                (255, 0, 0),
+                (255, 0, 0),
+            ],
+        ),
         (-20, 0, []),
-        (120, 7, [
-            (0, 255, 0),
-            (0, 255, 0),
-            (0, 255, 0),
-            (255, 180, 0),
-            (255, 180, 0),
-            (255, 0, 0),
-            (255, 0, 0),
-        ]),
+        (
+            120,
+            7,
+            [
+                (0, 255, 0),
+                (0, 255, 0),
+                (0, 255, 0),
+                (255, 180, 0),
+                (255, 180, 0),
+                (255, 0, 0),
+                (255, 0, 0),
+            ],
+        ),
     ],
 )
 def test_set_context_gauge_clamps_percentage_and_sets_pixels(
@@ -56,8 +62,7 @@ def test_set_context_gauge_clamps_percentage_and_sets_pixels(
     assert hat.rainbow.clear.call_count == 1
     assert hat.rainbow.set_pixel.call_count == expected_lights
     actual_colors = [
-        (args[1], args[2], args[3])
-        for args, _ in hat.rainbow.set_pixel.call_args_list
+        (args[1], args[2], args[3]) for args, _ in hat.rainbow.set_pixel.call_args_list
     ]
     assert actual_colors == expected_colors
     for index, ((pixel, *_), kwargs) in enumerate(hat.rainbow.set_pixel.call_args_list):

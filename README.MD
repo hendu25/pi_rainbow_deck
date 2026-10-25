@@ -108,9 +108,11 @@ On a development machine, install the host and test dependencies and run the har
 ```sh
 uv sync --group dev --extra host
 uv run pytest
+uv run pre-commit install
+uv run pre-commit run --all-files
 ```
 
-The tests use localhost sockets and stub Rainbow HAT, so they require neither a Pi nor physical hardware or real keystroke injection.
+The tests use localhost sockets and stub Rainbow HAT, so they require neither a Pi nor physical hardware or real keystroke injection. Pre-commit runs Ruff linting/formatting and standard YAML/TOML, whitespace, merge-conflict, and large-file checks.
 
 ## 🔐 Secure the command connection
 

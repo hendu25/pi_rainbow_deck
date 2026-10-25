@@ -1,10 +1,10 @@
-import os
-import sys
-import json
-import socket
-import threading
 import hmac
+import json
+import os
 import re
+import socket
+import sys
+import threading
 import time
 
 if __package__:
@@ -18,12 +18,14 @@ CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 MAX_COMMAND_BYTES = 4096
 COMMAND_TIMESTAMP_WINDOW = 30
 
+
 def load_config():
     if not os.path.exists(CONFIG_PATH):
         print(f"[ERROR] Missing config file: {CONFIG_PATH}")
         sys.exit(1)
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def validate_command(data, token, used_nonces):
     try:
@@ -50,9 +52,7 @@ def validate_command(data, token, used_nonces):
 
         canonical_payload = json.dumps(payload, separators=(",", ":"), sort_keys=True)
         expected_signature = hmac.new(
-            token.encode("utf-8"),
-            canonical_payload.encode("utf-8"),
-            "sha256"
+            token.encode("utf-8"), canonical_payload.encode("utf-8"), "sha256"
         ).hexdigest()
         if not hmac.compare_digest(signature, expected_signature):
             return None
@@ -67,6 +67,7 @@ def validate_command(data, token, used_nonces):
     except (UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError):
         return None
 
+
 def receive_command(conn):
     conn.settimeout(2.0)
     data = bytearray()
@@ -80,6 +81,7 @@ def receive_command(conn):
             return bytes(data)
         data.extend(chunk)
     raise ValueError("Command message exceeds maximum size")
+
 
 def main():
     config = load_config()
@@ -109,7 +111,7 @@ def main():
     threading.Thread(
         target=start_log_monitor,
         args=(pi_ip, telemetry_port, context_limit),
-        daemon=True
+        daemon=True,
     ).start()
 
     # Main Command Socket Listener
@@ -127,7 +129,9 @@ def main():
                     if data:
                         btn_id = validate_command(data, command_token, used_nonces)
                         if btn_id is None:
-                            print("[WARNING] Rejected unauthenticated or replayed command")
+                            print(
+                                "[WARNING] Rejected unauthenticated or replayed command"
+                            )
                         else:
                             action_id = host_actions.get(btn_id)
                             if action_id:
@@ -141,6 +145,7 @@ def main():
                 print(f"[WARNING] Rejected command connection: {e}")
             except Exception as e:
                 print(f"[ERROR]: {e}")
+
 
 if __name__ == "__main__":
     main()

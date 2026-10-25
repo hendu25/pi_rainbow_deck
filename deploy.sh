@@ -33,11 +33,11 @@ rsync -avz --delete \
 
 if [ $? -eq 0 ]; then
   echo "✅ Files successfully synced!"
-  
+
   # Restart systemd service over SSH so changes take effect
   echo "🔄 Restarting ${SERVICE_NAME} on Pi Zero..."
   ssh "${PI_USER}@${PI_HOST}" "sudo systemctl restart ${SERVICE_NAME}" 2>/dev/null
-  
+
   if [ $? -eq 0 ]; then
     echo "🎉 Service restarted successfully! Deployment complete."
   else

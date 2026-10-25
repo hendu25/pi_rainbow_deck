@@ -9,7 +9,6 @@ import time
 import types
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TOKEN = "a" * 64
 
@@ -41,6 +40,7 @@ def _import_pi_main(monkeypatch):
     os.environ["CLAUDE_DECK_COMMAND_TOKEN"] = TOKEN
     try:
         from claude_deck_pi import main
+
         return main
     finally:
         if previous_token is None:
@@ -70,9 +70,7 @@ def test_pi_command_authenticates_and_dispatches_over_localhost(monkeypatch):
     from claude_deck_host import bridge
 
     pi_main = _import_pi_main(monkeypatch)
-    config = json.loads(
-        (ROOT / "src" / "claude_deck_host" / "config.json").read_text()
-    )
+    config = json.loads((ROOT / "src" / "claude_deck_host" / "config.json").read_text())
     actions = config["profiles"]["SAFETY"]
     used_nonces = {}
 
@@ -120,9 +118,9 @@ def test_host_rejects_invalid_signature():
     packet = json.loads(signed_command())
     packet["signature"] = "0" * 64
 
-    assert bridge.validate_command(
-        json.dumps(packet).encode("utf-8"), TOKEN, {}
-    ) is None
+    assert (
+        bridge.validate_command(json.dumps(packet).encode("utf-8"), TOKEN, {}) is None
+    )
 
 
 def test_host_rejects_expired_command():
@@ -137,7 +135,12 @@ def test_host_rejects_malformed_command():
     from claude_deck_host import bridge
 
     assert bridge.validate_command(b"not-json", TOKEN, {}) is None
-    assert bridge.validate_command(signed_command(extra_fields={"unexpected": 1}), TOKEN, {}) is None
+    assert (
+        bridge.validate_command(
+            signed_command(extra_fields={"unexpected": 1}), TOKEN, {}
+        )
+        is None
+    )
 
 
 def test_receive_command_reads_newline_terminated_message():

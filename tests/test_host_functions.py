@@ -1,5 +1,4 @@
 import json
-import socket
 import time
 from pathlib import Path
 from types import SimpleNamespace
@@ -8,7 +7,6 @@ from unittest.mock import Mock
 import pytest
 
 from claude_deck_host import bridge, keystrokes, log_monitor
-
 
 ROOT = Path(__file__).resolve().parents[1]
 TOKEN = "a" * 64
@@ -141,12 +139,16 @@ def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
                 raise KeyboardInterrupt
 
     listener = Listener()
-    monkeypatch.setattr(bridge, "load_config", lambda: {
-        "active_profile": "SAFETY",
-        "networking": {"host_ip": "127.0.0.1", "command_port": 0},
-        "claude": {"context_window_limit": 100},
-        "profiles": {"SAFETY": {"BTN_A": "APPROVE"}},
-    })
+    monkeypatch.setattr(
+        bridge,
+        "load_config",
+        lambda: {
+            "active_profile": "SAFETY",
+            "networking": {"host_ip": "127.0.0.1", "command_port": 0},
+            "claude": {"context_window_limit": 100},
+            "profiles": {"SAFETY": {"BTN_A": "APPROVE"}},
+        },
+    )
     monkeypatch.setenv("CLAUDE_DECK_COMMAND_TOKEN", TOKEN)
     monkeypatch.setattr(bridge.socket, "socket", lambda *args: listener)
     thread = SimpleNamespace(start=Mock())
@@ -184,7 +186,9 @@ def test_execute_action_runs_macos_keystrokes(monkeypatch, action_id, expected):
     calls = []
     monkeypatch.setattr(keystrokes, "IS_MAC", True)
     monkeypatch.setattr(keystrokes, "IS_WIN", False)
-    monkeypatch.setattr(keystrokes.subprocess, "run", lambda command: calls.append(command[-1]))
+    monkeypatch.setattr(
+        keystrokes.subprocess, "run", lambda command: calls.append(command[-1])
+    )
     monkeypatch.setattr(keystrokes.time, "sleep", lambda delay: None)
 
     keystrokes.execute_action(action_id)
@@ -239,7 +243,9 @@ def test_get_latest_claude_log_finds_newest_and_handles_missing_dir(monkeypatch)
     monkeypatch.setattr(log_monitor.os.path, "exists", lambda path: True)
     monkeypatch.setattr(log_monitor.glob, "glob", lambda *args, **kwargs: logs)
     monkeypatch.setattr(
-        log_monitor.os.path, "getmtime", lambda path: {"older.jsonl": 1, "newer.jsonl": 2}[path]
+        log_monitor.os.path,
+        "getmtime",
+        lambda path: {"older.jsonl": 1, "newer.jsonl": 2}[path],
     )
     assert log_monitor.get_latest_claude_log() == "newer.jsonl"
     monkeypatch.setattr(log_monitor.os.path, "exists", lambda path: False)
@@ -305,7 +311,9 @@ def test_start_log_monitor_processes_usage_and_sends_changed_telemetry(monkeypat
 
     sent = []
     monkeypatch.setattr(log_monitor, "get_latest_claude_log", latest_log)
-    monkeypatch.setattr(log_monitor, "open", lambda *args, **kwargs: FakeLog(), raising=False)
+    monkeypatch.setattr(
+        log_monitor, "open", lambda *args, **kwargs: FakeLog(), raising=False
+    )
     monkeypatch.setattr(log_monitor, "send_telemetry", lambda *args: sent.append(args))
     monkeypatch.setattr(log_monitor.time, "sleep", lambda delay: None)
 

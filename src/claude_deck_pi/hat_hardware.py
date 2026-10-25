@@ -1,5 +1,7 @@
 import time
+
 import rainbowhat as rh
+
 
 def play_sound(freq: int, duration: float):
     try:
@@ -7,10 +9,12 @@ def play_sound(freq: int, duration: float):
     except Exception:
         pass
 
+
 def show_display(text: str):
     rh.display.clear()
     rh.display.print_str(text[:4].upper())
     rh.display.show()
+
 
 def set_context_gauge(percentage: float):
     rh.rainbow.clear()
@@ -19,6 +23,7 @@ def set_context_gauge(percentage: float):
         r, g, b = (0, 255, 0) if i < 3 else ((255, 180, 0) if i < 5 else (255, 0, 0))
         rh.rainbow.set_pixel(i, r, g, b, brightness=0.08)
     rh.rainbow.show()
+
 
 def pulse_rainbow(success=True):
     color = (0, 255, 0) if success else (255, 0, 0)
@@ -33,6 +38,7 @@ def pulse_rainbow(success=True):
     time.sleep(0.1)
     rh.rainbow.clear()
     rh.rainbow.show()
+
 
 def reset_hardware():
     rh.lights.clear()

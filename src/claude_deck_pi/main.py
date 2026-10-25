@@ -1,35 +1,37 @@
 #!/usr/bin/env python3
-import os
-import sys
-import time
-import socket
-import signal
-import json
-import threading
 import hashlib
 import hmac
+import json
+import os
 import re
 import secrets
+import signal
+import socket
+import sys
+import threading
+import time
+
 import rainbowhat as rh
 
 if __package__:
     from .hat_hardware import (
         play_sound,
-        show_display,
-        set_context_gauge,
         pulse_rainbow,
-        reset_hardware
+        reset_hardware,
+        set_context_gauge,
+        show_display,
     )
 else:
     from hat_hardware import (
         play_sound,
-        show_display,
-        set_context_gauge,
         pulse_rainbow,
-        reset_hardware
+        reset_hardware,
+        set_context_gauge,
+        show_display,
     )
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
+
 
 def load_config():
     if not os.path.exists(CONFIG_PATH):
@@ -37,6 +39,7 @@ def load_config():
         sys.exit(1)
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 config = load_config()
 active_profile = config.get("active_profile", "SAFETY")
@@ -50,22 +53,22 @@ COMMAND_TOKEN = os.environ.get("CLAUDE_DECK_COMMAND_TOKEN", "")
 PI_UI = config.get("profiles", {}).get(active_profile, {}).get("display", "SAFE")
 UI_LABELS = config.get("profiles", {}).get(active_profile, {})
 
+
 def send_button_press(button_id: str) -> bool:
     try:
         payload = {
             "button_id": button_id,
             "timestamp": int(time.time()),
-            "nonce": secrets.token_hex(16)
+            "nonce": secrets.token_hex(16),
         }
         canonical_payload = json.dumps(payload, separators=(",", ":"), sort_keys=True)
         signature = hmac.new(
             COMMAND_TOKEN.encode("utf-8"),
             canonical_payload.encode("utf-8"),
-            hashlib.sha256
+            hashlib.sha256,
         ).hexdigest()
         message = json.dumps(
-            {"payload": payload, "signature": signature},
-            separators=(",", ":")
+            {"payload": payload, "signature": signature}, separators=(",", ":")
         ).encode("utf-8")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(2.0)
@@ -75,22 +78,24 @@ def send_button_press(button_id: str) -> bool:
     except Exception:
         return False
 
+
 def listen_for_telemetry():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind(('0.0.0.0', TELEMETRY_PORT))
+        s.bind(("0.0.0.0", TELEMETRY_PORT))
         s.listen()
         while True:
             try:
                 conn, _ = s.accept()
                 with conn:
-                    data = conn.recv(1024).decode('utf-8').strip()
+                    data = conn.recv(1024).decode("utf-8").strip()
                     if data.startswith("CTX:"):
                         set_context_gauge(float(data.split(":")[1]))
                     elif data.startswith("TOK:"):
                         show_display(data.split(":")[1])
             except Exception:
                 pass
+
 
 def handle_button(btn_id: str, label: str, light):
     play_sound(1046, 0.03)
@@ -104,21 +109,26 @@ def handle_button(btn_id: str, label: str, light):
     light.off()
     show_display(UI_LABELS.get("display", "CLAU"))
 
+
 @rh.touch.A.press()
 def handle_a(ch):
     handle_button("BTN_A", UI_LABELS.get("A_label", "Y   "), rh.lights.red)
+
 
 @rh.touch.B.press()
 def handle_b(ch):
     handle_button("BTN_B", UI_LABELS.get("B_label", "CMP "), rh.lights.green)
 
+
 @rh.touch.C.press()
 def handle_c(ch):
     handle_button("BTN_C", UI_LABELS.get("C_label", "STOP"), rh.lights.blue)
 
+
 def cleanup(signum, frame):
     reset_hardware()
     sys.exit(0)
+
 
 def main():
     if not re.fullmatch(r"[0-9a-fA-F]{64}", COMMAND_TOKEN):
@@ -142,6 +152,7 @@ def main():
 
     threading.Thread(target=listen_for_telemetry, daemon=True).start()
     signal.pause()
+
 
 if __name__ == "__main__":
     main()

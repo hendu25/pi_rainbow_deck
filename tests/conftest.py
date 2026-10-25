@@ -33,9 +33,7 @@ def fake_rainbowhat(monkeypatch):
         set_all=recorder(),
         show=recorder(),
     )
-    hat.touch = types.SimpleNamespace(
-        A=TouchButton(), B=TouchButton(), C=TouchButton()
-    )
+    hat.touch = types.SimpleNamespace(A=TouchButton(), B=TouchButton(), C=TouchButton())
     monkeypatch.setitem(sys.modules, "rainbowhat", hat)
     monkeypatch.delitem(sys.modules, "claude_deck_pi.main", raising=False)
     monkeypatch.delitem(sys.modules, "claude_deck_pi.hat_hardware", raising=False)
