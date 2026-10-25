@@ -12,7 +12,7 @@ dependencies = []
 
 [project.optional-dependencies]
 host = [
-    "pyautogui>=0.9.54; sys_platform == 'win32'",
+    "pyautogui>=0.9.54; sys_platform == 'win32' or sys_platform == 'linux'",
 ]
 pi = [
     "rainbowhat",

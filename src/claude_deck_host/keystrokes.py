@@ -4,12 +4,13 @@ import subprocess
 
 IS_MAC = sys.platform == "darwin"
 IS_WIN = sys.platform.startswith("win")
+IS_LINUX = sys.platform.startswith("linux")
 
-if IS_WIN:
+if IS_WIN or IS_LINUX:
     try:
         import pyautogui
     except ImportError:
-        print("[ERROR] On Windows, run: pip install pyautogui")
+        print("[ERROR] Install the host extra with: uv sync --extra host")
         sys.exit(1)
 
 def execute_action(action_id: str):
@@ -31,8 +32,8 @@ def execute_action(action_id: str):
             if delay:
                 time.sleep(delay)
 
-    elif IS_WIN:
-        win_actions = {
+    elif IS_WIN or IS_LINUX:
+        desktop_actions = {
             "APPROVE": lambda: (pyautogui.typewrite('y'), pyautogui.press('enter')),
             "COMPACT": lambda: (pyautogui.typewrite('/compact'), pyautogui.press('enter')),
             "DIFF": lambda: (pyautogui.typewrite('/diff'), pyautogui.press('enter')),
@@ -41,6 +42,6 @@ def execute_action(action_id: str):
             "REWIND": lambda: (pyautogui.press('esc'), pyautogui.press('esc')),
             "ABORT": lambda: pyautogui.hotkey('ctrl', 'c')
         }
-        handler = win_actions.get(action_id)
+        handler = desktop_actions.get(action_id)
         if handler:
             handler()
