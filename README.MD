@@ -26,6 +26,10 @@ For a Pi daemon managed by systemd, add `Environment=CLAUDE_DECK_COMMAND_TOKEN=<
 
 Commands are authenticated, time-limited, and protected against replay. The bridge will not start without a valid secret, and the Pi will show an error if its secret is missing or invalid.
 
+## 🧪 Tests
+
+Install pytest with `python -m pip install pytest`, then run `python -m pytest`. The command security tests use localhost sockets and stub the Rainbow HAT modules, so they do not need a Raspberry Pi, physical HAT, or real keystroke injection.
+
 ---
 
 ## 📁 Repository Structure
