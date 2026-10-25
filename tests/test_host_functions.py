@@ -89,10 +89,14 @@ def test_bridge_receive_command_sets_timeout_and_rejects_oversized_data():
         bridge.receive_command(conn)
 
 
-def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(
+    monkeypatch, capsys, dry_run
+):
     valid = _signed_command(nonce="2" * 32)
     unmapped = _signed_command("BTN_UNKNOWN", nonce="3" * 32)
     invalid = b"not-json"
+    quit_command = _signed_command("QUIT", nonce="4" * 32)
 
     class Connection:
         def __init__(self, data):
@@ -114,9 +118,15 @@ def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
     class Listener:
         def __init__(self):
             self.connections = iter(
-                [Connection(valid), Connection(invalid), Connection(unmapped)]
+                [
+                    Connection(valid),
+                    Connection(invalid),
+                    Connection(unmapped),
+                    Connection(quit_command),
+                ]
             )
             self.bind_address = None
+            self.accept_count = 0
 
         def __enter__(self):
             return self
@@ -134,6 +144,7 @@ def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
             pass
 
         def accept(self):
+            self.accept_count += 1
             try:
                 return next(self.connections), ("127.0.0.1", 1234)
             except StopIteration:
@@ -145,22 +156,43 @@ def test_bridge_main_dispatches_valid_command_and_ignores_unmapped(monkeypatch):
         "load_config",
         lambda: {
             "active_profile": "SAFETY",
-            "networking": {"host_ip": "127.0.0.1", "command_port": 0},
+            "networking": {
+                "host_ip": "192.168.7.1",
+                "pi_ip": "192.168.7.2",
+                "command_port": 0,
+            },
             "claude": {"context_window_limit": 100},
             "profiles": {"SAFETY": {"BTN_A": "APPROVE"}},
         },
     )
     monkeypatch.setenv("PI_RAINBOW_DECK_COMMAND_TOKEN", TOKEN)
+    monkeypatch.setenv("PI_RAINBOW_DECK_LOCAL_TEST", "1" if dry_run else "0")
     monkeypatch.setattr(bridge.socket, "socket", lambda *args: listener)
     thread = SimpleNamespace(start=Mock())
-    monkeypatch.setattr(bridge.threading, "Thread", lambda **kwargs: thread)
+    thread_kwargs = {}
+
+    def create_thread(**kwargs):
+        thread_kwargs.update(kwargs)
+        return thread
+
+    monkeypatch.setattr(bridge.threading, "Thread", create_thread)
     action = Mock()
     monkeypatch.setattr(bridge, "execute_action", action)
 
     bridge.main()
 
-    assert listener.bind_address == ("127.0.0.1", 0)
-    action.assert_called_once_with("APPROVE")
+    expected_ip = "127.0.0.1" if dry_run else "192.168.7.1"
+    expected_pi_ip = "127.0.0.1" if dry_run else "192.168.7.2"
+    assert listener.bind_address == (expected_ip, 0)
+    assert listener.accept_count == 4
+    assert thread_kwargs["args"][:2] == (expected_pi_ip, 5001)
+    output = capsys.readouterr().out
+    assert "[INFO] Authenticated host shutdown requested" in output
+    if dry_run:
+        action.assert_not_called()
+        assert "[DRY RUN] Would execute action: APPROVE" in output
+    else:
+        action.assert_called_once_with("APPROVE")
     thread.start.assert_called_once()
 
 

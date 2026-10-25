@@ -1,4 +1,7 @@
+import builtins
+import importlib
 import json
+import sys
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -30,6 +33,54 @@ def test_pi_send_button_press_returns_false_when_connection_fails(
 
     monkeypatch.setattr(main.socket, "socket", fail_socket)
     assert main.send_button_press("BTN_A") is False
+
+
+def test_pi_local_test_mode_uses_virtual_hat_and_loopback(pi_modules, monkeypatch):
+    main, _, _ = pi_modules
+
+    monkeypatch.setenv("PI_RAINBOW_DECK_LOCAL_TEST", "1")
+    importlib.reload(main)
+    assert main.HOST_IP == "127.0.0.1"
+    assert main.LOCAL_TEST_MODE
+
+    monkeypatch.delenv("PI_RAINBOW_DECK_LOCAL_TEST")
+    importlib.reload(main)
+    assert main.HOST_IP == "192.168.7.1"
+    assert not main.LOCAL_TEST_MODE
+
+
+def test_virtual_hat_mode_does_not_import_hardware_driver(monkeypatch):
+    monkeypatch.setenv("PI_RAINBOW_DECK_LOCAL_TEST", "1")
+    monkeypatch.setenv("PI_RAINBOW_DECK_COMMAND_TOKEN", "a" * 64)
+    monkeypatch.setitem(sys.modules, "rainbowhat", None)
+    monkeypatch.delitem(sys.modules, "pi_rainbow_deck_pi.main", raising=False)
+    monkeypatch.delitem(sys.modules, "pi_rainbow_deck_pi.hat_hardware", raising=False)
+
+    main = importlib.import_module("pi_rainbow_deck_pi.main")
+
+    assert main.LOCAL_TEST_MODE
+    assert main.rh.__name__ == "pi_rainbow_deck_pi.virtual_hat"
+    assert main.show_display.__module__ == "pi_rainbow_deck_pi.virtual_hat"
+
+
+def test_virtual_hat_dispatches_selected_button(monkeypatch, capsys):
+    from pi_rainbow_deck_pi import virtual_hat
+
+    calls = []
+    monkeypatch.setattr(
+        virtual_hat.touch.A, "callback", lambda channel: calls.append(channel)
+    )
+    selections = iter(["a", "q"])
+    monkeypatch.setattr(builtins, "input", lambda prompt: next(selections))
+    quit_requests = []
+
+    virtual_hat.run(lambda: quit_requests.append("quit") or True)
+
+    assert calls == ["virtual"]
+    assert quit_requests == ["quit"]
+    output = capsys.readouterr().out
+    assert "Press A, B, or C" in output
+    assert "[VIRTUAL HAT] Host shutdown requested." in output
 
 
 def test_pi_listen_for_telemetry_routes_context_and_token(pi_modules, monkeypatch):

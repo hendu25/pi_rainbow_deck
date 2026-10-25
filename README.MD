@@ -120,6 +120,47 @@ For one command that runs tests, Ruff, and pre-commit checks, use:
 uv run python scripts/check.py
 ```
 
+GitHub Actions runs these checks for pull requests targeting `main` or `master`.
+The suite includes a hardware-free integration test that presses a virtual
+button, sends its authenticated command over localhost, and verifies the host's
+dry-run action mapping.
+
+### Try the host and Pi apps without a Rainbow HAT
+
+The Pi app includes a console-based virtual HAT for local integration testing.
+It sends the same authenticated button commands as the physical HAT. The host
+dry-run mode logs mapped actions instead of injecting keystrokes into the
+currently focused application.
+
+1. Open a terminal for the host app, set the same 64-character test token
+   required by both apps, and enable local test mode:
+
+   ```powershell
+   $env:PI_RAINBOW_DECK_COMMAND_TOKEN = "<64-character-test-secret>"
+   $env:PI_RAINBOW_DECK_LOCAL_TEST = "1"
+   uv run --extra host pi-rainbow-deck-host
+   ```
+
+2. In a second terminal, set the same token and local test flag, then start
+   the virtual HAT:
+
+   ```powershell
+   $env:PI_RAINBOW_DECK_COMMAND_TOKEN = "<64-character-test-secret>"
+   $env:PI_RAINBOW_DECK_LOCAL_TEST = "1"
+   uv run pi-rainbow-deck-pi
+   ```
+
+3. Enter `A`, `B`, or `C` in the Pi terminal. The virtual HAT displays feedback,
+   and the host terminal logs the mapped action without pressing keys. Enter
+   `Q` to send an authenticated shutdown request to the host and exit the
+   virtual HAT. You can also stop the host locally with `Ctrl+C` in its terminal.
+
+This local setup uses the configured ports, so stop any other app instances
+using those ports first. The single `PI_RAINBOW_DECK_LOCAL_TEST` flag routes
+both apps over loopback, enables the console HAT, and prevents real keystrokes.
+When unset, both apps use the network addresses and physical HAT configured as
+before.
+
 Add `--build` to also build the source distribution and wheel:
 
 ```sh

@@ -12,6 +12,12 @@ if sys.platform.startswith("linux"):
     sys.modules.setdefault("pyautogui", pyautogui)
 
 
+@pytest.fixture(autouse=True)
+def isolate_application_environment(monkeypatch):
+    monkeypatch.delenv("PI_RAINBOW_DECK_COMMAND_TOKEN", raising=False)
+    monkeypatch.delenv("PI_RAINBOW_DECK_LOCAL_TEST", raising=False)
+
+
 @pytest.fixture
 def fake_rainbowhat(monkeypatch):
     def recorder():

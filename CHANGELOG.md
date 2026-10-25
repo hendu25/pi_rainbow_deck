@@ -13,6 +13,10 @@ Initial public release.
 - Host bridge and Pi daemon with configurable SAFETY, CONTEXT, and AGENTS
   profiles.
 - HMAC-authenticated, timestamped button commands with replay protection.
+- Console-based virtual Rainbow HAT for local host/Pi integration testing,
+  including an authenticated quit command to stop the host bridge.
+- Host dry-run mode for testing button-to-action mapping without injecting
+  keystrokes.
 - Windows, macOS, and Linux host support. Linux key injection requires an X11
   desktop session.
 - `uv`-managed Python project, CLI commands, and Pi deployment script.
